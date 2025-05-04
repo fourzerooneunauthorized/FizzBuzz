@@ -1,0 +1,21 @@
+using System;
+
+
+namespace FizzBuzz.Config;
+
+
+public class AppConfigLoadingException : Exception
+{
+
+    public AppConfigLoadingException( string? message )
+        : base( message )
+    {
+    }
+
+
+    public AppConfigLoadingException( string? message, Exception? innerException )
+        : base( message, innerException )
+    {
+    }
+
+}
