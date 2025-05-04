@@ -9,14 +9,16 @@ namespace FizzBuzz.Config;
 public class CommandLineConfigProvider : IConfigProvider
 {
 
-    const string _roundsArgName = "rounds";
+    // rounds data
+    private const string _roundsArgName = "rounds";
     private static readonly Regex _roundsArgRegex = new( $"^{_roundsArgName}=(?<{_roundsArgName}>[0-9]+)$" );
-    const int _roundsDefault = 100;
+    private const int _roundsDefault = 100;
 
-    const string _devisorsArgName = "devisor";
-    private static readonly Regex _devisorArgRegex = new( $"^{_devisorsArgName}=((?<key>[0-9]+)=(?<text>.*))$" );
+    // divisor data
+    private const string _divisorsArgName = "divisor";
+    private static readonly Regex _divisorArgRegex = new( $"^{_divisorsArgName}=((?<key>[0-9]+)=(?<text>.*))$" );
 
-    private static readonly Dictionary<int, string> _devisorsDefault = new()
+    private static readonly Dictionary<int, string> _divisorsDefault = new()
     {
         { 3, "Fizz" },
         { 5, "Buzz" }
@@ -32,10 +34,10 @@ public class CommandLineConfigProvider : IConfigProvider
         },
         new()
         {
-            Name = _devisorsArgName,
+            Name = _divisorsArgName,
             IsRequired = false,
             Description =
-                "Multiple 'devisor' arguments specifying an integer devisor and the associated text to output when the round's integer is evenly devisable by this number. Specify in the form: \"devisor={whole number}={text} ... devisor={whole number}={text}\". E.g. \"devisor=3=Fizz devisor=5=Buzz\". Text segment can be enclosed in double-quotes to accomodate whitespace"
+                "Multiple 'divisor' arguments specifying an integer divisor and the associated text to output when the round's integer is evenly devisable by this number. Specify in the form: \"divisor={whole number}={text} ... divisor={whole number}={text}\". E.g. \"divisor=3=Fizz divisor=5=Buzz\". Text segment can be enclosed in double-quotes to accomodate whitespace"
         }
     ];
 
@@ -65,21 +67,25 @@ public class CommandLineConfigProvider : IConfigProvider
     /// <exception cref="AppConfigLoadingException">Loading configuration failed</exception>
     public AppConfig GetConfig()
     {
-        if ( _commandLineArgs.Any( a => !a.StartsWith( _devisorsArgName + "=" ) &&
+        // test for unknown args passed in
+        if ( _commandLineArgs.Any( a => !a.StartsWith( _divisorsArgName + "=" ) &&
                                         !a.StartsWith( _roundsArgName + "=" ) ) )
             throw new AppConfigLoadingException( "Unknown arguments given" );
 
-        return new AppConfig()
+        return new AppConfig
         {
-            Rounds = ParseRoundCountArgument( _commandLineArgs ) ?? _roundsDefault,
-            Devisors = ParseDevisorArguments( _commandLineArgs ) ?? _devisorsDefault
+            Rounds = ParseRoundCountArgument() ?? _roundsDefault,
+            Divisors = ParseDivisorArguments() ?? _divisorsDefault
         };
     }
 
 
-    private int? ParseRoundCountArgument( string[] args )
+    /// <summary>
+    /// Parses any round parameter found
+    /// </summary>
+    private int? ParseRoundCountArgument()
     {
-        string[] roundsArgs = args.Where( a => a.StartsWith( _roundsArgName + "=" ) ).ToArray();
+        string[] roundsArgs = _commandLineArgs.Where( a => a.StartsWith( _roundsArgName + "=" ) ).ToArray();
 
         if ( !roundsArgs.Any() )
             return null;
@@ -89,10 +95,10 @@ public class CommandLineConfigProvider : IConfigProvider
 
         Match match = _roundsArgRegex.Match( roundsArgs[ 0 ] );
 
-        if ( !match.Success || !match.Groups.TryGetValue( _roundsArgName, out var roundsGroup ) )
+        if ( !match.Success || !match.Groups.TryGetValue( _roundsArgName, out Group? roundsGroup ) )
             throw new AppConfigLoadingException( $"Argument {_roundsArgName} is malformed" );
 
-        if ( !int.TryParse( roundsGroup.Value, out var rounds ) )
+        if ( !int.TryParse( roundsGroup.Value, out int rounds ) )
             throw new AppConfigLoadingException( $"Argument {_roundsArgName} is not a number" );
 
         if ( rounds < 1 )
@@ -102,33 +108,36 @@ public class CommandLineConfigProvider : IConfigProvider
     }
 
 
-    private Dictionary<int, string>? ParseDevisorArguments( string[] args )
+    /// <summary>
+    /// Parses any divisor arguments found
+    /// </summary>
+    private Dictionary<int, string>? ParseDivisorArguments()
     {
-        string[] devisorArgs = args.Where( a => a.StartsWith( _devisorsArgName + "=" ) ).ToArray();
+        string[] divisorArgs = _commandLineArgs.Where( a => a.StartsWith( _divisorsArgName + "=" ) ).ToArray();
 
-        if ( !devisorArgs.Any() )
+        if ( !divisorArgs.Any() )
             return null;
 
         Dictionary<int, string> returnDict = new();
 
-        foreach ( string arg in devisorArgs )
+        foreach ( string arg in divisorArgs )
         {
-            Match match = _devisorArgRegex.Match( arg );
+            Match match = _divisorArgRegex.Match( arg );
 
             if ( !match.Success )
-                throw new AppConfigLoadingException( $"Argument {_devisorsArgName} is malformed" );
+                throw new AppConfigLoadingException( $"Argument {_divisorsArgName} is malformed" );
 
-            if ( !match.Groups.TryGetValue( "key", out var keyGroup ) )
-                throw new AppConfigLoadingException( $"Malformed {_devisorsArgName} number argument" );
+            if ( !match.Groups.TryGetValue( "key", out Group? keyGroup ) )
+                throw new AppConfigLoadingException( $"Malformed {_divisorsArgName} number argument" );
 
-            if ( !int.TryParse( keyGroup.Value, out var key ) )
-                throw new AppConfigLoadingException( $"Key argument for {_devisorsArgName} is not a number" );
+            if ( !int.TryParse( keyGroup.Value, out int key ) )
+                throw new AppConfigLoadingException( $"Key argument for {_divisorsArgName} is not a number" );
 
             if ( key < 1 )
-                throw new AppConfigLoadingException( $"{_devisorsArgName} key argument must be greater than 0" );
+                throw new AppConfigLoadingException( $"{_divisorsArgName} key argument must be greater than 0" );
 
-            if ( !match.Groups.TryGetValue( "text", out var termGroup ) )
-                throw new AppConfigLoadingException( $"Malformed {_devisorsArgName} text argument" );
+            if ( !match.Groups.TryGetValue( "text", out Group? termGroup ) )
+                throw new AppConfigLoadingException( $"Malformed {_divisorsArgName} text argument" );
 
             returnDict.Add( key, termGroup.Value );
         }

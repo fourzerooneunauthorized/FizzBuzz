@@ -7,7 +7,14 @@ namespace FizzBuzz.Config;
 public class AppConfig
 {
 
-    public int Rounds { get; set; }
-    public required Dictionary<int, string> Devisors { get; set; }
+    /// <summary>
+    /// Number of rounds to play
+    /// </summary>
+    public int Rounds { get; init; }
+
+    /// <summary>
+    /// Divisor settings, where key=divisor whole number;value=text replacement value
+    /// </summary>
+    public required Dictionary<int, string> Divisors { get; init; }
 
 }

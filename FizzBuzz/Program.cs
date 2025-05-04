@@ -7,16 +7,17 @@ using System.Linq;
 namespace FizzBuzz;
 
 
-class Program
+internal class Program
 {
 
-    static void Main( string[] args )
+    private static void Main( string[] args )
     {
         IConfigProvider configProvider = new CommandLineConfigProvider( args );
 
+        // short-circuit if requesting app help
         if ( ( args.Length == 1 ) && ( args.Single() == "help" ) )
         {
-            var itemDesc = configProvider.GetConfigItemDescriptions();
+            IList<ConfigItemMeta> itemDesc = configProvider.GetConfigItemDescriptions();
 
             Console.WriteLine( "Solves the FizzBuzz game: https://en.wikipedia.org/wiki/Fizz_buzz" );
 
@@ -25,7 +26,7 @@ class Program
 
             Console.WriteLine( "Parameters -" );
 
-            foreach ( var item in itemDesc )
+            foreach ( ConfigItemMeta item in itemDesc )
                 Console.WriteLine( $"{item.Name}: ({( item.IsRequired ? "required" : "optional" )}) {item.Description}" );
 
             return;
@@ -33,18 +34,21 @@ class Program
 
         AppConfig config = configProvider.GetConfig();
 
-        var roundsOutput = new List<string>();
+        // check number representing each round if any divisors can evenly divide into it, and build a full game result set
+        List<string> roundsOutput = [ ];
 
-        for ( int round = 1; round < config.Rounds; round++ )
+        for ( var round = 1; round <= config.Rounds; round++ )
         {
-            var devisorMatchedTerms = config.Devisors
-                                            .Where( d => ( round % d.Key ) == 0 )
-                                            .OrderBy( d => d.Key )
-                                            .Select( d => d.Value )
-                                            .ToList();
+            // note when multiple divisor hits for round, that text is outputted in order of lowest to highest divisor
+            string[] divisorMatchedTerms = config.Divisors
+                                               .Where( d => ( round % d.Key ) == 0 )
+                                               .OrderBy( d => d.Key )
+                                               .Select( d => d.Value )
+                                               .ToArray();
 
-            roundsOutput.Add( devisorMatchedTerms.Any()
-                                  ? string.Join( " ", devisorMatchedTerms )
+            // if no divisor matches then just output the number unmodified
+            roundsOutput.Add( divisorMatchedTerms.Any()
+                                  ? string.Join( " ", divisorMatchedTerms )
                                   : round.ToString() );
         }
 
