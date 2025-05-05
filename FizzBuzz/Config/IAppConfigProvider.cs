@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace FizzBuzz.Config;
 
 
-public interface IConfigProvider
+public interface IAppConfigProvider
 {
 
     /// <summary>

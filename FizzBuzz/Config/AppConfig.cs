@@ -13,8 +13,13 @@ public class AppConfig
     public int Rounds { get; init; }
 
     /// <summary>
-    /// Divisor settings, where key=divisor whole number;value=text replacement value
+    /// Divisor settings, where key=divisor whole number; value=text replacement value
     /// </summary>
     public required Dictionary<int, string> Divisors { get; init; }
+
+    /// <summary>
+    /// Also trigger replacement if round number contains any devisor number
+    /// </summary>
+    public bool MatchByContains { get; init; }
 
 }
