@@ -10,8 +10,8 @@ namespace FizzBuzz.Tests.Ui;
 public class ProgramOutputTests
 {
 
-    [TestCaseSource( nameof( GoodCommandTests ) )]
-    public void TestDefaultValues( (string[] Args, string ExpectedOutput) testProps )
+    [TestCaseSource( nameof( GoodCommandTestCases ) )]
+    public void TestValidInputGivesSameOutput( (string[] Args, string ExpectedOutput) testProps )
     {
         using Process process = new();
 
@@ -37,7 +37,7 @@ public class ProgramOutputTests
     }
 
 
-    private static IEnumerable<(string[] Args, string ExpectedOutput)> GoodCommandTests()
+    private static IEnumerable<(string[] Args, string ExpectedOutput)> GoodCommandTestCases()
     {
         // test default output
         yield return ( [ ],
@@ -65,7 +65,38 @@ public class ProgramOutputTests
 
 
     [Test]
-    public void TestError()
+    public void TestHelpOutput()
+    {
+        using Process process = new();
+
+        process.StartInfo = new ProcessStartInfo( "FizzBuzz.exe", [ "help" ] )
+        {
+            CreateNoWindow = true,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true
+        };
+
+        process.Start();
+
+        process.WaitForExit( TimeSpan.FromSeconds( 5 ) );
+
+        Assert.That( process.ExitCode, Is.EqualTo( 0 ) );
+
+        string error = process.StandardError.ReadToEnd();
+        Assert.That( error, Is.Empty );
+
+        string output = process.StandardOutput.ReadToEnd();
+        Assert.That( output, Is.Not.Empty );
+
+        Assert.That( output,
+                     Is.EqualTo(
+                         $"Solves the FizzBuzz game (https://en.wikipedia.org/wiki/Fizz_buzz){Environment.NewLine}Usage: FizzBuzz.exe [rounds=<number>] [divisors:<number>=<text> [..divisors:<number>=<text>]] [matchByContains=<true|false>] [help]{Environment.NewLine}Parameters -{Environment.NewLine}rounds: (optional) Number of rounds to play. Default: 100{Environment.NewLine}divisors: (optional) One or more 'divisors' arguments specifying an integer divisor and the associated text to output when the round's integer is evenly divisible by this number. Text segment can be enclosed in double-quotes to accomodate whitespace. Default: 3=Fizz 5=Buzz{Environment.NewLine}matchByContains: (optional) Also trigger a replacement during the round when the round number contains any of the divisor numbers. I.e. \"31\" triggers if there is a divisor \"3\" set. Default False{Environment.NewLine}help: (optional) Shows help message{Environment.NewLine}" )
+        );
+    }
+
+
+    [Test]
+    public void TestInvalidInputGivesErrorOutput()
     {
         using Process process = new();
 

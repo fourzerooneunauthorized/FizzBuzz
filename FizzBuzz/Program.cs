@@ -13,44 +13,43 @@ internal class Program
 
     private static void Main( string[] args )
     {
-        IAppConfigProvider configProvider;
-
         try
         {
-            configProvider = new AppConfigProvider( new ConfigurationBuilder()
-                                                    .AddCommandLine( args )
-                                                    .Build() );
+            IAppConfigProvider configProvider = new AppConfigProvider( new ConfigurationBuilder()
+                                                                       .AddCommandLine( args )
+                                                                       .Build() );
+
+            AppConfig config = configProvider.GetConfig();
+
+            // short-circuit if requesting app help
+            if ( ( args.Length == 1 ) && ( args.Single() == "help" ) )
+            {
+                DisplayHelp( configProvider );
+
+                return;
+            }
+
+            List<string> roundsOutput = RunRound( config );
+
+            Console.WriteLine( string.Join( ", ", roundsOutput ) );
         }
-        catch ( Exception ex )
+        catch ( AppConfigValidationException ex )
         {
             Console.Error.WriteLine( ex.Message );
             Environment.Exit( 1 );
-
-            throw;
         }
-
-        AppConfig config = configProvider.GetConfig();
-
-        // short-circuit if requesting app help
-        if ( ( args.Length == 1 ) && ( args.Single() == "help" ) )
+        catch ( Exception ex )
         {
-            IList<ConfigItemMeta> itemDesc = configProvider.GetConfigItemDescriptions();
-
-            Console.WriteLine( "Solves the FizzBuzz game: https://en.wikipedia.org/wiki/Fizz_buzz" );
-
-            Console.WriteLine(
-                $"Usage: FizzBuzz.exe {string.Join( " ", itemDesc.Select( i => i.Name + "={value}" ) )}" );
-
-            Console.WriteLine( "Parameters -" );
-
-            foreach ( ConfigItemMeta item in itemDesc )
-                Console.WriteLine( $"{item.Name}: ({( item.IsRequired ? "required" : "optional" )}) {item.Description}" );
-
-            return;
+            Console.Error.WriteLine( $"A problem occurred and the program couldn't finish: {ex.Message}" );
+            Environment.Exit( 1 );
         }
+    }
 
+
+    private static List<string> RunRound( AppConfig config )
+    {
         // check number representing each round if any divisors can evenly divide into it, and build a full game result set
-        List<string> roundsOutput = [ ];
+        List<string> roundsResults = [ ];
 
         for ( var round = 1; round <= config.Rounds; round++ )
         {
@@ -63,12 +62,28 @@ internal class Program
                                                  .ToArray();
 
             // if no divisor matches then just output the number unmodified
-            roundsOutput.Add( divisorMatchedTerms.Any()
-                                  ? string.Join( " ", divisorMatchedTerms )
-                                  : round.ToString() );
+            roundsResults.Add( divisorMatchedTerms.Any()
+                                   ? string.Join( " ", divisorMatchedTerms )
+                                   : round.ToString() );
         }
 
-        Console.WriteLine( string.Join( ", ", roundsOutput ) );
+        return roundsResults;
+    }
+
+
+    private static void DisplayHelp( IAppConfigProvider configProvider )
+    {
+        IList<ConfigItemMeta> itemDesc = configProvider.GetConfigItemDescriptions();
+
+        Console.WriteLine( "Solves the FizzBuzz game (https://en.wikipedia.org/wiki/Fizz_buzz)" );
+
+        Console.WriteLine(
+            $"Usage: FizzBuzz.exe [{string.Join( "] [", itemDesc.Select( i => i.Usage ) )}]" );
+
+        Console.WriteLine( "Parameters -" );
+
+        foreach ( ConfigItemMeta item in itemDesc )
+            Console.WriteLine( $"{item.Name}: ({( item.IsRequired ? "required" : "optional" )}) {item.Description}" );
     }
 
 }

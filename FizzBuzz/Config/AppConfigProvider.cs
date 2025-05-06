@@ -32,19 +32,22 @@ public class AppConfigProvider : IAppConfigProvider
         {
             Name = _roundsArgName,
             IsRequired = false,
+            Usage = $"{_roundsArgName}=<number>",
             Description = $"Number of rounds to play. Default: {_roundsDefault}"
         },
         new()
         {
             Name = _divisorsArgName,
             IsRequired = false,
+            Usage = $"{_divisorsArgName}:<number>=<text> [..{_divisorsArgName}:<number>=<text>]",
             Description =
-                "Multiple 'divisors' arguments specifying an integer divisor and the associated text to output when the round's integer is evenly devisable by this number. Specify in the form: \"divisor={whole number}={text} ... divisor={whole number}={text}\". E.g. \"divisor=3=Fizz divisor=5=Buzz\". Text segment can be enclosed in double-quotes to accomodate whitespace"
+                $"One or more 'divisors' arguments specifying an integer divisor and the associated text to output when the round's integer is evenly divisible by this number. Text segment can be enclosed in double-quotes to accomodate whitespace. Default: {string.Join( " ", _divisorsDefault.Select( d => $"{d.Key}={d.Value}" ) )}"
         },
         new()
         {
             Name = _matchByContainsArgName,
             IsRequired = false,
+            Usage = $"{_matchByContainsArgName}=<true|false>",
             Description =
                 $"Also trigger a replacement during the round when the round number contains any of the divisor numbers. I.e. \"31\" triggers if there is a divisor \"3\" set. Default {_matchByContainsDefault}"
         },
@@ -52,6 +55,7 @@ public class AppConfigProvider : IAppConfigProvider
         {
             Name = "help",
             IsRequired = false,
+            Usage = "help",
             Description = "Shows help message"
         }
     ];

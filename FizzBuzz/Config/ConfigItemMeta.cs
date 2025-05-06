@@ -15,6 +15,11 @@ public class ConfigItemMeta
     public bool IsRequired { get; init; }
 
     /// <summary>
+    /// Shows how the config item is formatted
+    /// </summary>
+    public required string Usage { get; init; }
+
+    /// <summary>
     /// Config item description
     /// </summary>
     public required string Description { get; init; }
