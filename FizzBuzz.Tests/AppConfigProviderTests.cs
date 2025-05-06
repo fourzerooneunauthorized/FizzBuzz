@@ -11,7 +11,7 @@ namespace FizzBuzz.Tests;
 public class AppConfigProviderTests
 {
 
-    [TestCaseSource( nameof( GoodCommandLineArgsSource ) )]
+    [TestCaseSource( nameof( GoodCommandLineArgsTestCases ) )]
     public void TestGetConfig( string[] args )
     {
         AppConfigProvider? configProvider = null;
@@ -32,7 +32,7 @@ public class AppConfigProviderTests
     }
 
 
-    private static IEnumerable<string[]> GoodCommandLineArgsSource()
+    private static IEnumerable<string[]> GoodCommandLineArgsTestCases()
     {
         yield return [ ];
         yield return [ "rounds=100" ];
@@ -47,7 +47,7 @@ public class AppConfigProviderTests
     }
 
 
-    [TestCaseSource( nameof( BadCommandLineArgsSource ) )]
+    [TestCaseSource( nameof( BadCommandLineArgsTestCases ) )]
     public void TestRejectedConfig( string[] args )
     {
         Assert.Throws<AppConfigValidationException>( () =>
@@ -59,7 +59,7 @@ public class AppConfigProviderTests
     }
 
 
-    private static IEnumerable<string[]> BadCommandLineArgsSource()
+    private static IEnumerable<string[]> BadCommandLineArgsTestCases()
     {
         yield return [ "rounds=100", "divisors:5=" ]; // divisor replacement text missing
         yield return [ "rounds=0", "divisors:3=Fizz", "notasupportedarg=1" ]; // unknown arg given
